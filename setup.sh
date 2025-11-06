@@ -194,7 +194,7 @@ cat <<HTML > "$HTML_DIR/index.html"
             <h2>Día en el parque</h2>
             <p class="post-meta">Publicado el 29 de Octubre, 2025</p>
             <p>Día increíble en el parque hoy. Llevé a mi perro y no paró de correr.</p>
-            <p>Lo único malo fue que casi se come un frisbee que no era suyo... ¡este <strong>Chispas</strong> es terrible! Pero bueno, es imposible enfadarse con él.</p>
+            <p>Lo único malo fue que casi se come un frisbee que no era suyo... ¡este Chispas es terrible! Pero bueno, es imposible enfadarse con él.</p>
         </div>
         <div class="post">
             <h2>Nuevo servidor de pruebas</h2>
@@ -228,7 +228,7 @@ cat <<HTML > "$HTML_DIR/articulo.html"
             <h2>El Peligro de Compartir en Exceso (OSINT)</h2>
             <p class="post-meta">Artículo de "Seguridad-Hoy.com" (re-publicado)</p>
             <p>En la era digital, compartimos voluntariamente una cantidad ingente de información personal. Los atacantes ya no necesitan exploits complejos; solo necesitan leer.</p>
-            <p>Este método, conocido como Inteligencia de Fuentes Abiertas (OSINT), es devastador. Un estudio reciente demostró que el <strong>nombre de una mascota</strong> es la segunda contraseña o "pregunta secreta" más común después de "123456".</p>
+            <p>Este método, conocido como Inteligencia de Fuentes Abiertas (OSINT), es devastador. Un estudio reciente demostró que el nombre de una mascota es la segunda contraseña o "pregunta secreta" más común después de "123456".</p>
             <p>Los administradores de sistemas deben educar a su personal sobre los riesgos de mezclar información personal y credenciales de trabajo.</p>
         </div>
     </div>
