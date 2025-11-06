@@ -3,9 +3,9 @@
 # Laboratorio de Puzle Lógico (OSINT)
 # --------------------------------------------------------------------
 # Instala httpd y telnet-server.
-# Crea un usuario 'jperez' con una contraseña ('Chispas') que
-# puede ser descubierta conectando las pistas del sitio web.
-# Deshabilita la página de bienvenida de Fedora.
+# Crea un usuario 'jperez' con una contraseña ('Chispas').
+# Despliega un sitio web con pistas.
+# INCLUYE SANEAMIENTO COMPLETO DE APACHE.
 # --------------------------------------------------------------------
 
 set -euo pipefail
@@ -38,16 +38,30 @@ dnf install -y httpd telnet-server firewalld net-tools >/dev/null || \
 ok "Paquetes instalados."
 
 # --------------------------------------------------------
-# 1.5. Limpieza de Apache (¡ARREGLO AÑADIDO!)
+# 2. Saneamiento de Apache (BLOQUE MEJORADO)
 # --------------------------------------------------------
-info "Deshabilitando la página de bienvenida de Fedora..."
+info "Limpiando configuraciones previas de Apache..."
+
+# Deshabilita la página de bienvenida de Fedora (evita conflictos)
 if [ -f /etc/httpd/conf.d/welcome.conf ]; then
-    mv /etc/httpd/conf.d/welcome.conf /etc/httpd/conf.d/welcome.conf.bak
-    ok "Página de bienvenida deshabilitada."
+  mv /etc/httpd/conf.d/welcome.conf /etc/httpd/conf.d/welcome.conf.bak
+  ok "Página de bienvenida de Fedora deshabilitada."
 fi
 
+# Limpia drop-ins de systemd conflictivos (ej. php-fpm)
+if [ -f /etc/systemd/system/httpd.service.d/php-fpm.conf ]; then
+  rm -f /etc/systemd/system/httpd.service.d/php-fpm.conf
+  ok "Archivo drop-in php-fpm.conf eliminado."
+fi
+
+# Define el puerto de escucha (Limpia configs anteriores)
+sed -i '/^Listen /d' /etc/httpd/conf/httpd.conf
+echo "Listen 80" >> /etc/httpd/conf/httpd.conf
+ok "Puerto de Apache (Listen 80) re-configurado."
+
+
 # --------------------------------------------------------
-# 2. Creación de Usuario y Contraseña Vulnerable
+# 3. Creación de Usuario y Contraseña Vulnerable
 # --------------------------------------------------------
 info "Configurando el objetivo de Telnet..."
 if ! id "jperez" &>/dev/null; then
@@ -62,7 +76,7 @@ echo "Chispas" | passwd --stdin jperez >/dev/null
 ok "Contraseña asignada al usuario 'jperez'."
 
 # --------------------------------------------------------
-# 3. Habilitación de Servicios y Firewall
+# 4. Habilitación de Servicios y Firewall
 # --------------------------------------------------------
 info "Habilitando servicios y configurando firewall..."
 systemctl enable --now telnet.socket || error "No se pudo iniciar Telnet."
@@ -77,7 +91,7 @@ if command -v firewall-cmd &>/dev/null; then
 fi
 
 # --------------------------------------------------------
-# 4. Despliegue del Acertijo Web
+# 5. Despliegue del Acertijo Web
 # --------------------------------------------------------
 info "Desplegando el sitio web..."
 HTML_DIR="/var/www/html"
@@ -165,7 +179,7 @@ HTML
 ok "articulo.html (Pista 3: La vulnerabilidad) creado."
 
 # --------------------------------------------------------
-# 5. Aplicar Permisos
+# 6. Aplicar Permisos
 # --------------------------------------------------------
 info "Aplicando permisos y contexto SELinux..."
 chown -R apache:apache "$HTML_DIR"
@@ -173,8 +187,14 @@ restorecon -Rv "$HTML_DIR" >/dev/null 2>&1 || true
 ok "Permisos aplicados."
 
 # --------------------------------------------------------
-# 6. Confirmación Final
+# 7. Reinicio Final de Servicios
 # --------------------------------------------------------
+info "Reiniciando servicios para aplicar todos los cambios..."
+# Es importante reiniciar después de que los archivos web
+# y las configuraciones estén en su sitio.
+systemctl restart httpd
+systemctl restart telnet.socket
+
 sleep 1
 ok "✅ Configuración completa del Laboratorio-Puzle Lógico."
 echo -e "${GREEN}Servicios expuestos:${NC}"
