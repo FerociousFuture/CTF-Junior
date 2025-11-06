@@ -96,9 +96,11 @@ fi
 info "Desplegando el sitio web..."
 HTML_DIR="/var/www/html"
 rm -rf "$HTML_DIR"/*
+ok "Directorio web limpiado."
 
 # --- Estilo CSS (compartido) ---
-read -r -d '' CSS_STYLE <<'EOF'
+# ¡ARREGLADO! Se cambió el método 'read' por una asignación de variable estándar.
+CSS_STYLE=$(cat <<'EOF'
 <style>
     body { font-family: 'Verdana', sans-serif; margin: 0; padding: 0; background-color: #fdfdfd; }
     header { background-color: #333; color: white; padding: 20px; text-align: center; }
@@ -112,6 +114,8 @@ read -r -d '' CSS_STYLE <<'EOF'
     .footer { text-align: center; font-size: 0.8em; color: #999; margin-top: 20px; }
 </style>
 EOF
+)
+ok "Variable CSS cargada en memoria."
 
 # --- Página 1: El Blog (index.html) ---
 cat <<HTML > "$HTML_DIR/index.html"
@@ -190,8 +194,6 @@ ok "Permisos aplicados."
 # 7. Reinicio Final de Servicios
 # --------------------------------------------------------
 info "Reiniciando servicios para aplicar todos los cambios..."
-# Es importante reiniciar después de que los archivos web
-# y las configuraciones estén en su sitio.
 systemctl restart httpd
 systemctl restart telnet.socket
 
