@@ -253,7 +253,7 @@ info "Reiniciando servicios para aplicar todos los cambios..."
 systemctl restart httpd
 systemctl restart telnet.socket
 
-sleep 
+# --- LÍNEA DE SLEEP ELIMINADA ---
 ok "✅ Configuración completa del Laboratorio-Puzle Lógico."
 echo -e "${GREEN}Servicios expuestos:${NC}"
 echo -e "  - ${CYAN}HTTP (Apache)${NC} en puerto ${YELLOW}80${NC}"
