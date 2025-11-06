@@ -5,7 +5,7 @@
 # Instala httpd y telnet-server.
 # Crea un usuario 'jperez' con una contraseña ('Chispas') que
 # puede ser descubierta conectando las pistas del sitio web.
-# No requiere fuerza bruta de directorios (gobuster).
+# Deshabilita la página de bienvenida de Fedora.
 # --------------------------------------------------------------------
 
 set -euo pipefail
@@ -38,10 +38,18 @@ dnf install -y httpd telnet-server firewalld net-tools >/dev/null || \
 ok "Paquetes instalados."
 
 # --------------------------------------------------------
+# 1.5. Limpieza de Apache (¡ARREGLO AÑADIDO!)
+# --------------------------------------------------------
+info "Deshabilitando la página de bienvenida de Fedora..."
+if [ -f /etc/httpd/conf.d/welcome.conf ]; then
+    mv /etc/httpd/conf.d/welcome.conf /etc/httpd/conf.d/welcome.conf.bak
+    ok "Página de bienvenida deshabilitada."
+fi
+
+# --------------------------------------------------------
 # 2. Creación de Usuario y Contraseña Vulnerable
 # --------------------------------------------------------
 info "Configurando el objetivo de Telnet..."
-# Creamos un usuario 'jperez' (Juan Perez)
 if ! id "jperez" &>/dev/null; then
     useradd jperez
     info "Usuario 'jperez' creado."
@@ -114,7 +122,6 @@ cat <<HTML > "$HTML_DIR/index.html"
             <p>Día increíble en el parque hoy. Llevé a mi perro y no paró de correr.</p>
             <p>Lo único malo fue que casi se come un frisbee que no era suyo... ¡este <strong>Chispas</strong> es terrible! Pero bueno, es imposible enfadarse con él.</p>
         </div>
-
         <div class="post">
             <h2>Nuevo servidor de pruebas</h2>
             <p class="post-meta">Publicado el 25 de Octubre, 2025</p>
@@ -128,7 +135,6 @@ HTML
 ok "index.html (Pista 1 y 2: Mascota y Servicio) creado."
 
 # --- Página 2: La Pista (articulo.html) ---
-# Esta página AHORA ESTÁ ENLAZADA desde el index.html
 cat <<HTML > "$HTML_DIR/articulo.html"
 <!DOCTYPE html>
 <html lang="es">
@@ -143,7 +149,6 @@ cat <<HTML > "$HTML_DIR/articulo.html"
         <a href="index.html">Inicio</a>
         <a href="articulo.html">Artículos de Seguridad</a>
     </nav>
-
     <div class="container">
         <div class="post">
             <h2>El Peligro de Compartir en Exceso (OSINT)</h2>
