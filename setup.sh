@@ -5,7 +5,7 @@
 # Instala httpd y telnet-server.
 # Crea un usuario 'jperez' con una contraseña ('Chispas').
 # Despliega un sitio web con pistas.
-# INCLUYE SANEAMIENTO COMPLETO DE APACHE.
+# Crea un home directory realista con archivos de relleno y un flag.
 # --------------------------------------------------------------------
 
 set -euo pipefail
@@ -38,30 +38,27 @@ dnf install -y httpd telnet-server firewalld net-tools >/dev/null || \
 ok "Paquetes instalados."
 
 # --------------------------------------------------------
-# 2. Saneamiento de Apache (BLOQUE MEJORADO)
+# 2. Saneamiento de Apache
 # --------------------------------------------------------
 info "Limpiando configuraciones previas de Apache..."
 
-# Deshabilita la página de bienvenida de Fedora (evita conflictos)
 if [ -f /etc/httpd/conf.d/welcome.conf ]; then
   mv /etc/httpd/conf.d/welcome.conf /etc/httpd/conf.d/welcome.conf.bak
   ok "Página de bienvenida de Fedora deshabilitada."
 fi
 
-# Limpia drop-ins de systemd conflictivos (ej. php-fpm)
 if [ -f /etc/systemd/system/httpd.service.d/php-fpm.conf ]; then
   rm -f /etc/systemd/system/httpd.service.d/php-fpm.conf
   ok "Archivo drop-in php-fpm.conf eliminado."
 fi
 
-# Define el puerto de escucha (Limpia configs anteriores)
 sed -i '/^Listen /d' /etc/httpd/conf/httpd.conf
 echo "Listen 80" >> /etc/httpd/conf/httpd.conf
 ok "Puerto de Apache (Listen 80) re-configurado."
 
 
 # --------------------------------------------------------
-# 3. Creación de Usuario y Contraseña Vulnerable
+# 3. Creación de Usuario, Contraseña y Flag
 # --------------------------------------------------------
 info "Configurando el objetivo de Telnet..."
 if ! id "jperez" &>/dev/null; then
@@ -71,9 +68,69 @@ else
     info "Usuario 'jperez' ya existe."
 fi
 
-# Asignamos la contraseña 'Chispas' (La pista)
 echo "Chispas" | passwd --stdin jperez >/dev/null
 ok "Contraseña asignada al usuario 'jperez'."
+
+# --- Creación del entorno de usuario y el Flag (CON RELLENO) ---
+info "Creando entorno de usuario y flag en /home/jperez..."
+USER_HOME="/home/jperez"
+# Crear la estructura de directorios estándar
+mkdir -p "$USER_HOME/Desktop"
+mkdir -p "$USER_HOME/Documents/borradores_reporte"
+mkdir -p "$USER_HOME/Downloads/instaladores_viejos"
+mkdir -p "$USER_HOME/Pictures/vacaciones_2024"
+mkdir -p "$USER_HOME/Music"
+mkdir -p "$USER_HOME/Videos"
+
+# --- Archivos de Relleno (Distracciones) ---
+info "Creando archivos de relleno..."
+# Desktop
+echo "Ideas para el blog: 1. Seguridad en IoT. 2. Mi perro." > "$USER_HOME/Desktop/notas.txt"
+touch "$USER_HOME/Desktop/TODO.txt"
+touch "$USER_HOME/Desktop/captura-01.png"
+
+# Documents
+echo "Borrador final del articulo de seguridad" > "$USER_HOME/Documents/articulo_final.txt"
+touch "$USER_HOME/Documents/presupuesto_Q4.xlsx"
+touch "$USER_HOME/Documents/presentacion_equipo.pptx"
+touch "$USER_HOME/Documents/borradores_reporte/reporte_v1.txt"
+touch "$USER_HOME/Documents/borradores_reporte/reporte_v2_final.txt"
+
+# Downloads
+touch "$USER_HOME/Downloads/nmap-static-build.tar.gz"
+touch "$USER_HOME/Downloads/instaladores_viejos/anydesk.rpm"
+touch "$USER_HOME/Downloads/datasheet_X-1000.pdf"
+
+# Pictures
+touch "$USER_HOME/Pictures/fondo_pantalla_fedora.jpg"
+touch "$USER_HOME/Pictures/vacaciones_2024/IMG_1024.jpg"
+touch "$USER_HOME/Pictures/vacaciones_2024/IMG_1025.jpg"
+
+# Music/Videos
+touch "$USER_HOME/Music/cancion_favorita.mp3"
+touch "$USER_HOME/Videos/tutorial_nmap.mp4"
+
+# --- El Flag (Objetivo) ---
+# Se coloca dentro de Documents para que el jugador tenga que buscarlo.
+cat <<'EOF' > "$USER_HOME/Documents/TOPSECRET.txt"
+  ______________
+< GANASTE PIBE >
+  --------------
+     \
+      \  .——————.
+       .———.    \
+      (     )    +——\
+       `———´    |  |
+       |        |  |
+       |   __   +——/
+       \__/  \__/
+EOF
+
+# Corregir permisos (root crea los archivos, hay que dárselos a jperez)
+chown -R jperez:jperez "$USER_HOME"
+ok "Entorno de usuario y flag creados en $USER_HOME."
+# --- Fin de la sección de creación de archivos ---
+
 
 # --------------------------------------------------------
 # 4. Habilitación de Servicios y Firewall
@@ -99,7 +156,6 @@ rm -rf "$HTML_DIR"/*
 ok "Directorio web limpiado."
 
 # --- Estilo CSS (compartido) ---
-# ¡ARREGLADO! Se cambió el método 'read' por una asignación de variable estándar.
 CSS_STYLE=$(cat <<'EOF'
 <style>
     body { font-family: 'Verdana', sans-serif; margin: 0; padding: 0; background-color: #fdfdfd; }
@@ -197,7 +253,7 @@ info "Reiniciando servicios para aplicar todos los cambios..."
 systemctl restart httpd
 systemctl restart telnet.socket
 
-sleep 1
+sleep 
 ok "✅ Configuración completa del Laboratorio-Puzle Lógico."
 echo -e "${GREEN}Servicios expuestos:${NC}"
 echo -e "  - ${CYAN}HTTP (Apache)${NC} en puerto ${YELLOW}80${NC}"
